@@ -1,0 +1,56 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "darkerapi"
+version = "0.1.0"
+description = "Python client for DarkerAPI — read your stash, watch the market and trade in Dark and Darker over HTTP."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+authors = [{ name = "DarkerAPI", email = "support@darkerapi.com" }]
+keywords = ["dark-and-darker", "darkerapi", "api-client", "game", "marketplace"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Games/Entertainment",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+# One dependency, on purpose. httpx gives connection pooling, timeouts and
+# streaming without pulling in a framework.
+dependencies = ["httpx>=0.24"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "ruff>=0.5"]
+
+[project.urls]
+Homepage = "https://darkerapi.com"
+Documentation = "https://darkerapi.com/docs"
+Source = "https://github.com/DarkerAPI/darkerapi-python"
+Issues = "https://github.com/DarkerAPI/darkerapi-python/issues"
+Status = "https://darkerapi.com/status"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/darkerapi"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+# `type` and `list` shadow builtins in a few signatures, deliberately: those are
+# the API's own parameter names and renaming them would be worse.
+ignore = ["A002", "A003"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
