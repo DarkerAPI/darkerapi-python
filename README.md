@@ -210,12 +210,16 @@ creates it on the first successful upload and claims the name then.
 1. Bump `version` in `pyproject.toml` *and* `__version__` in
    `src/darkerapi/__init__.py`. They must match; the second one is what the
    `User-Agent` reports.
-2. Tag and push:
+2. Tag and push. The tag is what publishes:
    ```bash
-   git tag v0.1.0 && git push origin v0.1.0
+   git tag -a v0.1.0 -m "0.1.0" && git push origin v0.1.0
    ```
-3. Publish a GitHub Release for that tag. The workflow runs the tests on 3.9 and
-   3.13, builds, checks the metadata, then uploads.
+   The workflow runs the tests on 3.9 and 3.13, builds, checks the metadata,
+   then uploads.
+
+A tag rather than a GitHub Release on purpose: a Release is stamped with the
+name of whoever published it, on a public page, permanently. A tag carries only
+the identity `git` was configured with.
 
 A version number can only be used once — PyPI will not let you overwrite or
 re-upload one, which is why `twine check` runs before the upload rather than

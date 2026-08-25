@@ -10,9 +10,17 @@
 
 name: Publish
 
+# Triggered by a version tag, deliberately, rather than by a published GitHub
+# Release. A Release carries the name of whoever clicked the button, forever, on
+# a public page; an annotated tag carries only the identity git was configured
+# with — which for this project is `DarkerAPI <noreply@darkerapi.com>`.
+#
+# PyPI's trusted publisher is keyed on the repository, the workflow filename and
+# the environment, none of which change here — so the trigger can be whatever
+# suits the project.
 on:
-  release:
-    types: [published]
+  push:
+    tags: ["v*"]
   # So the build can be checked without cutting a release. This path never
   # publishes — see the `if` on the publish job.
   workflow_dispatch:
@@ -57,8 +65,8 @@ jobs:
   publish:
     name: Publish to PyPI
     needs: build
-    # Releases only. A manual run builds and checks but must never upload.
-    if: github.event_name == 'release'
+    # Version tags only. A manual run builds and checks but must never upload.
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     # Named environment, so you can require a manual approval on it in the
     # repository settings if you ever want a human in the loop.
