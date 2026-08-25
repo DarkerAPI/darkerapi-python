@@ -15,6 +15,12 @@ stash = api.session("main").inventory.stash()
 ## Install
 
 ```bash
+pip install darkerapi
+```
+
+Or straight from the repository, for an unreleased change:
+
+```bash
 pip install git+https://github.com/DarkerAPI/darkerapi-python
 ```
 
@@ -177,6 +183,43 @@ DarkerAPI is an independent third-party tool, not affiliated with IRONMACE Co.,
 Ltd. or Valve Corporation. Automating a game account is very likely to breach the
 game's own terms, and an account using a tool like this one may be suspended or
 deleted without warning. That is your decision to make.
+
+## Releasing
+
+Publishing runs from `.github/workflows/publish.yml` on a published GitHub
+Release, using **PyPI Trusted Publishing** — there is no API token in the repo,
+in secrets, or on anyone's laptop.
+
+**One-time setup**, on [pypi.org](https://pypi.org) with an account that has 2FA
+enabled. Go to *Your projects → Publishing → Add a new pending publisher* and
+enter exactly:
+
+| Field | Value |
+| --- | --- |
+| PyPI Project Name | `darkerapi` |
+| Owner | `DarkerAPI` |
+| Repository name | `darkerapi-python` |
+| Workflow name | `publish.yml` |
+| Environment name | `pypi` |
+
+"Pending" is the right choice while the project does not exist yet — PyPI
+creates it on the first successful upload and claims the name then.
+
+**Each release:**
+
+1. Bump `version` in `pyproject.toml` *and* `__version__` in
+   `src/darkerapi/__init__.py`. They must match; the second one is what the
+   `User-Agent` reports.
+2. Tag and push:
+   ```bash
+   git tag v0.1.0 && git push origin v0.1.0
+   ```
+3. Publish a GitHub Release for that tag. The workflow runs the tests on 3.9 and
+   3.13, builds, checks the metadata, then uploads.
+
+A version number can only be used once — PyPI will not let you overwrite or
+re-upload one, which is why `twine check` runs before the upload rather than
+after.
 
 ## Licence
 

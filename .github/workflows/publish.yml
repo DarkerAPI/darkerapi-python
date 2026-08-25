@@ -1,0 +1,77 @@
+# Publish to PyPI when a GitHub Release is published.
+#
+# There is no API token anywhere in this file, and none in the repository
+# secrets. It uses PyPI's *Trusted Publishing*: GitHub mints a short-lived OIDC
+# token for this exact workflow in this exact repository, and PyPI trusts it
+# because you registered the pairing once on pypi.org. Nothing long-lived exists
+# to be stolen — which is the whole reason to prefer it over an API token.
+#
+# One-time setup on PyPI is in the README, under "Releasing".
+
+name: Publish
+
+on:
+  release:
+    types: [published]
+  # So the build can be checked without cutting a release. This path never
+  # publishes — see the `if` on the publish job.
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # The range pyproject.toml claims to support. A release must not ship
+        # against a version nobody ran the tests on.
+        python-version: ["3.9", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -e ".[dev]"
+      - run: ruff check .
+      - run: pytest -q
+
+  build:
+    name: Build
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install build twine
+      - run: python -m build
+      # Catches a malformed README or bad metadata *before* upload. PyPI
+      # rejects those, and a version number cannot be reused once burnt.
+      - run: twine check dist/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    name: Publish to PyPI
+    needs: build
+    # Releases only. A manual run builds and checks but must never upload.
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    # Named environment, so you can require a manual approval on it in the
+    # repository settings if you ever want a human in the loop.
+    environment:
+      name: pypi
+      url: https://pypi.org/p/darkerapi
+    permissions:
+      # The only permission trusted publishing needs, and the reason no secret
+      # is required.
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
