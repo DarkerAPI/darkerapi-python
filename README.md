@@ -186,9 +186,9 @@ deleted without warning. That is your decision to make.
 
 ## Releasing
 
-Publishing runs from `.github/workflows/publish.yml` on a published GitHub
-Release, using **PyPI Trusted Publishing** — there is no API token in the repo,
-in secrets, or on anyone's laptop.
+Publishing runs from `.github/workflows/publish.yml` on a version tag, using
+**PyPI Trusted Publishing** — there is no API token in the repo, in secrets, or
+on anyone's laptop.
 
 **One-time setup**, on [pypi.org](https://pypi.org) with an account that has 2FA
 enabled. Go to *Your projects → Publishing → Add a new pending publisher* and
@@ -210,20 +210,49 @@ creates it on the first successful upload and claims the name then.
 1. Bump `version` in `pyproject.toml` *and* `__version__` in
    `src/darkerapi/__init__.py`. They must match; the second one is what the
    `User-Agent` reports.
-2. Tag and push. The tag is what publishes:
+2. Commit, then `./scripts/release.sh`, which tags the commit and pushes the tag
+   — the push is what publishes. The workflow runs the tests on 3.9 and 3.13,
+   builds, checks the metadata, then uploads.
+
+The script does two things a bare `git push` does not. It refuses a version that
+is already on PyPI, and it checks the two version strings against each other
+before tagging — a mismatch ships a package whose `User-Agent` lies about
+itself, and a version number can only ever be used once. And it pushes as the
+`darkerapi-bot` machine account rather than as you: GitHub attributes a workflow
+run — and the deployment record the publish job creates — to *whoever pushed the
+tag*, never to the identity in `git config`. Push one yourself and the
+repository's Deployments panel reads "by a maintainer", on a public page,
+permanently.
+
+A tag rather than a GitHub Release for the same reason: a Release is stamped
+with the name of whoever clicked the button. A tag carries only its tagger,
+which here is `DarkerAPI <noreply@darkerapi.com>`.
+
+### The release account
+
+One-time, and the same account serves every DarkerAPI repository.
+
+1. Create a GitHub account, `darkerapi-bot`. The org itself holds the plain
+   `darkerapi` name — users and organisations share one namespace — so a machine
+   account cannot have it. A `+` alias on your own address is enough to sign up
+   with: `bot@example.com`.
+2. Invite it to the `DarkerAPI` org with **Write** on this repository, and
+   accept the invitation from the bot account.
+3. Signed in as the bot, create a **fine-grained** personal access token under
+   *Settings → Developer settings → Personal access tokens*. Resource owner
+   `DarkerAPI`, this repository only, and a single permission: **Contents →
+   Read and write**. An org owner may need to approve it before it works.
+4. Put it where `scripts/release.sh` looks for it:
    ```bash
-   git tag -a v0.1.0 -m "0.1.0" && git push origin v0.1.0
+   security add-generic-password -s darkerapi-bot-github-pat \
+     -a darkerapi-bot -w 'github_pat_…' -U
    ```
-   The workflow runs the tests on 3.9 and 3.13, builds, checks the metadata,
-   then uploads.
 
-A tag rather than a GitHub Release on purpose: a Release is stamped with the
-name of whoever published it, on a public page, permanently. A tag carries only
-the identity `git` was configured with.
-
-A version number can only be used once — PyPI will not let you overwrite or
-re-upload one, which is why `twine check` runs before the upload rather than
-after.
+The token stays in the Keychain — never in the repository, never in
+`.git/config`, and never on a command line. Before it tags anything
+`release.sh` asks GitHub which account the stored token belongs to, and stops if
+the answer is not `darkerapi-bot`; a token that quietly turned out to be yours
+is the one failure that would defeat the point of the exercise.
 
 ## Licence
 
