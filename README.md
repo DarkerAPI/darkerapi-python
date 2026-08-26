@@ -238,10 +238,13 @@ One-time, and the same account serves every DarkerAPI repository.
    with: `bot@example.com`.
 2. Invite it to the `DarkerAPI` org with **Write** on this repository, and
    accept the invitation from the bot account.
-3. Signed in as the bot, create a **fine-grained** personal access token under
-   *Settings → Developer settings → Personal access tokens*. Resource owner
-   `DarkerAPI`, this repository only, and a single permission: **Contents →
-   Read and write**. An org owner may need to approve it before it works.
+3. Signed in as the bot, create a **classic** personal access token under
+   *Settings → Developer settings → Personal access tokens → Tokens (classic)*,
+   with one scope ticked: **`public_repo`**. That is enough to push a tag to a
+   public repository and grants nothing else. A fine-grained token can also work,
+   but its *Repository access* radio defaults to "Public repositories
+   (read-only)" — leave it there and the push fails with `contents=write` while
+   every permission box further down the page still looks correct.
 4. Put it where `scripts/release.sh` looks for it:
    ```bash
    security add-generic-password -s darkerapi-bot-github-pat \
