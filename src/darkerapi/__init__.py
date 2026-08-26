@@ -18,7 +18,7 @@ See https://darkerapi.com/docs for the full API reference.
 
 from __future__ import annotations
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 from ._transport import DEFAULT_BASE_URL
 from .client import DarkerAPI
