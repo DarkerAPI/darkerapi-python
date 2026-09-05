@@ -184,47 +184,6 @@ Ltd. or Valve Corporation. Automating a game account is very likely to breach th
 game's own terms, and an account using a tool like this one may be suspended or
 deleted without warning. That is your decision to make.
 
-## Releasing
-
-Publishing runs from `.github/workflows/publish.yml` on a version tag, using
-**PyPI Trusted Publishing** — there is no API token in the repo, in secrets, or
-on anyone's laptop.
-
-**One-time setup**, on [pypi.org](https://pypi.org) with an account that has 2FA
-enabled. Go to *Your projects → Publishing → Add a new pending publisher* and
-enter exactly:
-
-| Field | Value |
-| --- | --- |
-| PyPI Project Name | `darkerapi` |
-| Owner | `DarkerAPI` |
-| Repository name | `darkerapi-python` |
-| Workflow name | `publish.yml` |
-| Environment name | `pypi` |
-
-"Pending" is the right choice while the project does not exist yet — PyPI
-creates it on the first successful upload and claims the name then.
-
-**Each release:**
-
-1. Bump `version` in `pyproject.toml` *and* `__version__` in
-   `src/darkerapi/__init__.py`. They must match; the second one is what the
-   `User-Agent` reports.
-2. Commit, then `./scripts/release.sh`, which tags the commit and pushes the tag
-   — the push is what publishes. The workflow runs the tests on 3.9 and 3.13,
-   builds, checks the metadata, then uploads.
-
-The script refuses a version that is already on PyPI, and checks the two version
-strings against each other before tagging — a mismatch ships a package whose
-`User-Agent` lies about itself, and a version number can only ever be used once.
-It also pushes the tag from a machine account rather than a maintainer's: GitHub
-attributes a workflow run, and the deployment record the publish job creates, to
-whoever pushed the tag and never to the identity in `git config`.
-
-A tag rather than a GitHub Release for the same reason: a Release is stamped
-with the name of whoever clicked the button. A tag carries only its tagger,
-which here is `DarkerAPI <noreply@darkerapi.com>`.
-
 ## Licence
 
 MIT. See [LICENSE](LICENSE).
