@@ -3,15 +3,14 @@
 # Cut a release: tag the current commit and push the tag, which is what starts
 # .github/workflows/publish.yml.
 #
-# The push is deliberately made with a *machine account's* credential rather
-# than yours. GitHub stamps a workflow run — and the deployment record the
+# The push is deliberately made with a machine account's credential rather than
+# a maintainer's. GitHub stamps a workflow run — and the deployment record the
 # publish job creates — with the account that pushed, not with the identity in
-# `git config`. Push it yourself and the Deployments panel reads "by a maintainer"
-# on a public page, permanently. Push it as darkerapi-bot and it reads
-# "by darkerapi-bot".
+# `git config`, so a release pushed by hand puts a personal name on a public
+# page and leaves it there.
 #
 # The token lives in the macOS Keychain, never in this repository and never in
-# .git/config. One-time setup is in the README, under "Releasing".
+# .git/config.
 #
 set -euo pipefail
 
@@ -47,7 +46,7 @@ if curl -sfS -o /dev/null "https://pypi.org/pypi/darkerapi/$version/json" 2>/dev
 fi
 
 token=$(security find-generic-password -s "$KEYCHAIN_SERVICE" -a "$BOT_USER" -w 2>/dev/null) ||
-  { echo "release: no token in the Keychain for $BOT_USER — see README" >&2; exit 1; }
+  { echo "release: no token in the Keychain for $BOT_USER" >&2; exit 1; }
 
 # Guard against the whole point of this script quietly failing: if the stored
 # token belongs to the wrong account, the push still succeeds and the release is

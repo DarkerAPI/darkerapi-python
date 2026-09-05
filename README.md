@@ -214,48 +214,16 @@ creates it on the first successful upload and claims the name then.
    — the push is what publishes. The workflow runs the tests on 3.9 and 3.13,
    builds, checks the metadata, then uploads.
 
-The script does two things a bare `git push` does not. It refuses a version that
-is already on PyPI, and it checks the two version strings against each other
-before tagging — a mismatch ships a package whose `User-Agent` lies about
-itself, and a version number can only ever be used once. And it pushes as the
-`darkerapi-bot` machine account rather than as you: GitHub attributes a workflow
-run — and the deployment record the publish job creates — to *whoever pushed the
-tag*, never to the identity in `git config`. Push one yourself and the
-repository's Deployments panel reads "by a maintainer", on a public page,
-permanently.
+The script refuses a version that is already on PyPI, and checks the two version
+strings against each other before tagging — a mismatch ships a package whose
+`User-Agent` lies about itself, and a version number can only ever be used once.
+It also pushes the tag from a machine account rather than a maintainer's: GitHub
+attributes a workflow run, and the deployment record the publish job creates, to
+whoever pushed the tag and never to the identity in `git config`.
 
 A tag rather than a GitHub Release for the same reason: a Release is stamped
 with the name of whoever clicked the button. A tag carries only its tagger,
 which here is `DarkerAPI <noreply@darkerapi.com>`.
-
-### The release account
-
-One-time, and the same account serves every DarkerAPI repository.
-
-1. Create a GitHub account, `darkerapi-bot`. The org itself holds the plain
-   `darkerapi` name — users and organisations share one namespace — so a machine
-   account cannot have it. A `+` alias on your own address is enough to sign up
-   with: `bot@example.com`.
-2. Invite it to the `DarkerAPI` org with **Write** on this repository, and
-   accept the invitation from the bot account.
-3. Signed in as the bot, create a **classic** personal access token under
-   *Settings → Developer settings → Personal access tokens → Tokens (classic)*,
-   with one scope ticked: **`public_repo`**. That is enough to push a tag to a
-   public repository and grants nothing else. A fine-grained token can also work,
-   but its *Repository access* radio defaults to "Public repositories
-   (read-only)" — leave it there and the push fails with `contents=write` while
-   every permission box further down the page still looks correct.
-4. Put it where `scripts/release.sh` looks for it:
-   ```bash
-   security add-generic-password -s darkerapi-bot-github-pat \
-     -a darkerapi-bot -w 'github_pat_…' -U
-   ```
-
-The token stays in the Keychain — never in the repository, never in
-`.git/config`, and never on a command line. Before it tags anything
-`release.sh` asks GitHub which account the stored token belongs to, and stops if
-the answer is not `darkerapi-bot`; a token that quietly turned out to be yours
-is the one failure that would defeat the point of the exercise.
 
 ## Licence
 
